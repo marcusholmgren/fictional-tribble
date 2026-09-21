@@ -13,26 +13,37 @@ class DataLoadError(Exception):
 
 
 class CSVTransactionLoader:
-    """Loader for CSV formatted transaction files."""
+    """Loader strategy for CSV formatted transaction files."""
 
     def can_load(self, filepath: str) -> bool:
-        """Check if file ends with .csv extension."""
+        """Check if file extension matches .csv."""
         return Path(filepath).suffix.lower() == ".csv"
 
     def load(self, filepath: str) -> list[Transaction]:
-        """Load transactions from CSV file."""
+        """Parse and convert CSV rows into Transaction domain objects.
+
+        Args:
+            filepath: Path to CSV data file.
+
+        Returns:
+            List of parsed Transaction instances.
+
+        Raises:
+            DataLoadError: If file not found, missing required columns, or invalid values.
+        """
         path = Path(filepath)
         if not path.exists():
             raise DataLoadError(f"File not found: {filepath}")
 
         transactions: list[Transaction] = []
         try:
+            # utf-8-sig automatically strips BOM if present in exported CSVs
             with path.open("r", encoding="utf-8-sig") as f:
                 reader = csv.DictReader(f)
                 if reader.fieldnames is None:
                     return transactions
 
-                # Normalize field names to lower case
+                # Normalize header names to lowercase for robust column mapping
                 field_map = {fn.strip().lower(): fn for fn in reader.fieldnames}
                 required = {"date", "description", "category", "amount"}
                 missing = required - set(field_map.keys())
@@ -73,14 +84,24 @@ class CSVTransactionLoader:
 
 
 class JSONTransactionLoader:
-    """Loader for JSON formatted transaction files."""
+    """Loader strategy for JSON formatted transaction files."""
 
     def can_load(self, filepath: str) -> bool:
-        """Check if file ends with .json extension."""
+        """Check if file extension matches .json."""
         return Path(filepath).suffix.lower() == ".json"
 
     def load(self, filepath: str) -> list[Transaction]:
-        """Load transactions from JSON file."""
+        """Parse and convert JSON array objects into Transaction domain objects.
+
+        Args:
+            filepath: Path to JSON data file.
+
+        Returns:
+            List of parsed Transaction instances.
+
+        Raises:
+            DataLoadError: If file not found, root element is not list, or keys/types invalid.
+        """
         path = Path(filepath)
         if not path.exists():
             raise DataLoadError(f"File not found: {filepath}")
@@ -135,17 +156,28 @@ class JSONTransactionLoader:
 
 
 class CompositeTransactionLoader:
-    """Composite loader selecting suitable loader based on file extension/type."""
+    """Composite loader dispatching to suitable loader strategy based on file type."""
 
     def __init__(self, loaders: list | None = None) -> None:
+        """Initialize composite loader with registered file strategy loaders."""
         self._loaders = loaders or [CSVTransactionLoader(), JSONTransactionLoader()]
 
     def register_loader(self, loader) -> None:
-        """Dynamically add a new file loader strategy."""
+        """Register a new TransactionLoader strategy implementation dynamically."""
         self._loaders.append(loader)
 
     def load(self, filepath: str) -> list[Transaction]:
-        """Delegates loading to the first matching loader."""
+        """Delegate file loading to the first registered loader matching file type.
+
+        Args:
+            filepath: Path to transaction file.
+
+        Returns:
+            List of parsed Transaction domain instances.
+
+        Raises:
+            DataLoadError: If no registered loader supports the given file format.
+        """
         for loader in self._loaders:
             if loader.can_load(filepath):
                 return loader.load(filepath)

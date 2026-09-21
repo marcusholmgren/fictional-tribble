@@ -21,12 +21,21 @@ class ExpenseTrackerApp:
         registry: ReportRegistry | None = None,
         formatter: TableReportFormatter | None = None,
     ) -> None:
+        """Initialize application controller with injected components (DIP)."""
         self.loader = loader or CompositeTransactionLoader()
         self.writer = writer or CompositeTransactionWriter()
         self.registry = registry or create_default_registry()
         self.formatter = formatter or TableReportFormatter()
 
     def run(self, args: list[str] | None = None) -> int:
+        """Parse command-line arguments and execute request (report view or transaction creation).
+
+        Args:
+            args: Optional list of argument strings (defaults to sys.argv[1:] if None).
+
+        Returns:
+            Exit code integer (0 for success, 1 for error).
+        """
         parser = argparse.ArgumentParser(
             prog="expense-tracker",
             description="CLI Expense Tracker Application following SOLID architecture principles.",
@@ -87,15 +96,18 @@ class ExpenseTrackerApp:
 
         parsed_args = parser.parse_args(args)
 
+        # Handle list modes request
         if parsed_args.list_modes:
             print("Available Report Modes:")
             for rid, name in self.registry.list_reports():
                 print(f"  - {rid}: {name}")
             return 0
 
+        # Require target filepath for all other actions
         if not parsed_args.filepath:
             parser.error("the following arguments are required: filepath")
 
+        # Handle expense transaction insertion request (-a / --add)
         if parsed_args.add:
             if not parsed_args.description:
                 parser.error("--description is required when adding an expense.")
@@ -141,6 +153,7 @@ class ExpenseTrackerApp:
                 print(f"Error writing file: {e}", file=sys.stderr)
                 return 1
 
+        # Handle report generation and display flow
         try:
             transactions = self.loader.load(parsed_args.filepath)
         except DataLoadError as e:
@@ -160,7 +173,7 @@ class ExpenseTrackerApp:
 
 
 def main() -> None:
-    """CLI entry point function."""
+    """CLI application entry point."""
     app = ExpenseTrackerApp()
     sys.exit(app.run())
 
