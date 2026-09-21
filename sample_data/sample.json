@@ -1,0 +1,7 @@
+[
+  {"date": "2025-01-10", "description": "Groceries", "category": "Food", "amount": 120.50},
+  {"date": "2025-01-15", "description": "Coffee", "category": "Food", "amount": 4.50},
+  {"date": "2025-01-20", "description": "Electricity", "category": "Utilities", "amount": 85.00},
+  {"date": "2025-02-01", "description": "Gym", "category": "Health", "amount": 45.00},
+  {"date": "2025-02-14", "description": "Dinner", "category": "Food", "amount": 65.00}
+]
