@@ -22,7 +22,9 @@ class TableReportFormatter:
         col_keys = [r.key for r in result.rows]
         col_counts = [str(r.count) for r in result.rows]
         col_totals = [f"{self.currency_symbol}{r.total:,.2f}" for r in result.rows]
-        col_pcts = [f"{r.percentage}%" if r.percentage is not None else "-" for r in result.rows]
+        col_pcts = [
+            f"{r.percentage}%" if r.percentage is not None else "-" for r in result.rows
+        ]
 
         # Calculate max column widths
         w_key = max(len(result.headers[0]), max(len(k) for k in col_keys))
@@ -44,7 +46,9 @@ class TableReportFormatter:
 
         # Format rows
         for key, cnt, tot, pct in zip(col_keys, col_counts, col_totals, col_pcts):
-            lines.append(f"{key:<{w_key}}  {cnt:>{w_cnt}}  {tot:>{w_tot}}  {pct:>{w_pct}}")
+            lines.append(
+                f"{key:<{w_key}}  {cnt:>{w_cnt}}  {tot:>{w_tot}}  {pct:>{w_pct}}"
+            )
 
         lines.append(separator)
 
@@ -77,7 +81,9 @@ class JSONReportFormatter:
                     "key": r.key,
                     "count": r.count,
                     "total": str(r.total),
-                    "percentage": str(r.percentage) if r.percentage is not None else None,
+                    "percentage": str(r.percentage)
+                    if r.percentage is not None
+                    else None,
                 }
                 for r in result.rows
             ],
