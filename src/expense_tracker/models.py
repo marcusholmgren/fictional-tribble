@@ -1,6 +1,6 @@
 """Domain models for the expense tracker application."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 

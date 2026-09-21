@@ -135,9 +135,7 @@ class ExpenseTrackerApp:
 
             try:
                 self.writer.write(parsed_args.filepath, [new_tx], append=True)
-                print(
-                    f"Successfully added expense to '{parsed_args.filepath}'."
-                )
+                print(f"Successfully added expense to '{parsed_args.filepath}'.")
                 return 0
             except DataWriteError as e:
                 print(f"Error writing file: {e}", file=sys.stderr)

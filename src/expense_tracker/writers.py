@@ -3,7 +3,7 @@
 import csv
 import json
 from pathlib import Path
-from expense_tracker.loaders import CSVTransactionLoader, JSONTransactionLoader
+from expense_tracker.loaders import JSONTransactionLoader
 from expense_tracker.models import Transaction
 
 
