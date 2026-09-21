@@ -43,3 +43,18 @@ class ReportFormatter(Protocol):
     def format(self, result: ReportResult) -> str:
         """Formats a ReportResult object into a presentable string representation."""
         ...
+
+
+@runtime_checkable
+class TransactionWriter(Protocol):
+    """Protocol for writing/appending transaction data to file sources."""
+
+    def can_write(self, filepath: str) -> bool:
+        """Determines if this writer can write to the given file format."""
+        ...
+
+    def write(
+        self, filepath: str, transactions: list[Transaction], append: bool = False
+    ) -> None:
+        """Writes or appends transactions to a file path."""
+        ...
