@@ -12,21 +12,30 @@ class DataWriteError(Exception):
 
 
 class CSVTransactionWriter:
-    """Writer for CSV formatted transaction files."""
+    """Writer strategy for CSV formatted transaction files."""
 
     def can_write(self, filepath: str) -> bool:
-        """Check if file ends with .csv extension."""
+        """Check if file extension matches .csv."""
         return Path(filepath).suffix.lower() == ".csv"
 
     def write(
         self, filepath: str, transactions: list[Transaction], append: bool = False
     ) -> None:
-        """Write or append transactions to a CSV file."""
+        """Write or append transaction models to a CSV file.
+
+        Args:
+            filepath: Target file path.
+            transactions: List of Transaction domain models to save.
+            append: If True, append to existing file without re-writing headers.
+
+        Raises:
+            DataWriteError: If file creation or write operation fails.
+        """
         path = Path(filepath)
         file_exists = path.exists() and path.stat().st_size > 0
 
-        # If append mode is requested on an existing file, check if headers exist
         fieldnames = ["date", "description", "category", "amount"]
+        # Write CSV header row only when creating new file or overwriting
         write_header = not file_exists or not append
 
         mode = "a" if append and file_exists else "w"
@@ -51,19 +60,29 @@ class CSVTransactionWriter:
 
 
 class JSONTransactionWriter:
-    """Writer for JSON formatted transaction files."""
+    """Writer strategy for JSON formatted transaction files."""
 
     def can_write(self, filepath: str) -> bool:
-        """Check if file ends with .json extension."""
+        """Check if file extension matches .json."""
         return Path(filepath).suffix.lower() == ".json"
 
     def write(
         self, filepath: str, transactions: list[Transaction], append: bool = False
     ) -> None:
-        """Write or append transactions to a JSON file."""
+        """Write or append transaction models to a JSON file array.
+
+        Args:
+            filepath: Target file path.
+            transactions: List of Transaction domain models to save.
+            append: If True, load existing JSON records and append new records.
+
+        Raises:
+            DataWriteError: If existing file cannot be loaded or file write fails.
+        """
         path = Path(filepath)
         existing_txs: list[Transaction] = []
 
+        # When appending, parse existing JSON array items first
         if append and path.exists() and path.stat().st_size > 0:
             loader = JSONTransactionLoader()
             try:
@@ -96,16 +115,26 @@ class CompositeTransactionWriter:
     """Composite writer selecting suitable writer based on file extension/type."""
 
     def __init__(self, writers: list | None = None) -> None:
+        """Initialize composite writer with registered writer strategies."""
         self._writers = writers or [CSVTransactionWriter(), JSONTransactionWriter()]
 
     def register_writer(self, writer) -> None:
-        """Dynamically add a new file writer strategy."""
+        """Dynamically register a new TransactionWriter strategy."""
         self._writers.append(writer)
 
     def write(
         self, filepath: str, transactions: list[Transaction], append: bool = False
     ) -> None:
-        """Delegates writing to the first matching writer."""
+        """Delegates writing to the first registered matching writer strategy.
+
+        Args:
+            filepath: Target file path.
+            transactions: List of Transaction domain models to write.
+            append: Whether to append to existing file content.
+
+        Raises:
+            DataWriteError: If no registered writer strategy supports the file path format.
+        """
         for writer in self._writers:
             if writer.can_write(filepath):
                 writer.write(filepath, transactions, append=append)
